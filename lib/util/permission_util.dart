@@ -9,6 +9,12 @@ class PermissionUtil {
       PermissionStatus status = await Permission.storage.status;
       if (status.isGranted) {
         print('Granted');
+        PermissionStatus requestStatus = await Permission.storage.request();
+        if (requestStatus.isGranted) {
+          return true;
+        } else {
+          return false;
+        }
         return true;
       } else if (status.isPermanentlyDenied) {
         print('Denied');
@@ -22,6 +28,7 @@ class PermissionUtil {
         }
       }
     } else {
+      print('permission no');
       return true;
     }
   }

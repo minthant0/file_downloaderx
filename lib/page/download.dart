@@ -52,7 +52,6 @@ class _DownloadPageState extends State<DownloadPage> {
             margin: EdgeInsets.fromLTRB(0, 50, 0, 0),
             child: ElevatedButton(
               onPressed: () async {
-              //  onTap(context, '');
                 if(urlController.text!=''){
                   onTap(context, urlController.text);
                 }else{
@@ -76,12 +75,8 @@ class _DownloadPageState extends State<DownloadPage> {
     bool isGranted = await PermissionUtil.check();
 
     if (isGranted) {
-      Map<Permission, PermissionStatus> statuses = await [
-        Permission.storage,
-        //add more permission to request here.
-      ].request();
-
-      if(statuses[Permission.storage]!.isGranted){
+      PermissionStatus requestStatus = await Permission.storage.request();
+      if (requestStatus.isGranted) {
         var dir = await DownloadsPathProvider.downloadsDirectory;
         if(dir != null){
           final fileName = FileUtil.getFileName(downloadUrl);
@@ -115,9 +110,11 @@ class _DownloadPageState extends State<DownloadPage> {
           }
           //output:  /storage/emulated/0/Download/banner.png
         }
-      }else{
-        print("No permission to read and write.");
+        return true;
+      } else {
+        return false;
       }
+
      // Navigator.push(context, PageTransition(type: PageTransitionType.fade, child: FileViewPage(filePath: downloadUrl,)));
     } else {
       debugPrint('no permission');
