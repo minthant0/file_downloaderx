@@ -113,14 +113,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.6"
-  downloads_path_provider_28:
-    dependency: "direct main"
-    description:
-      name: downloads_path_provider_28
-      sha256: fac9327c4eec7ac3cc52cb9bf2c1a18b5c74a1ab92a18c5c150f300a1225d5e8
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.2"
   fake_async:
     dependency: transitive
     description:
@@ -150,6 +142,22 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_easyloading:
+    dependency: "direct main"
+    description:
+      name: flutter_easyloading
+      sha256: ba21a3c883544e582f9cc455a4a0907556714e1e9cf0eababfcb600da191d17c
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.5"
+  flutter_file_view:
+    dependency: "direct main"
+    description:
+      name: flutter_file_view
+      sha256: "91d721da8e21ae0c3e063b7f6b2a41e3914e5286e2173b16a8cfe6492b6ea612"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.1"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -432,6 +440,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.7.4"
+  power_file_view:
+    dependency: "direct main"
+    description:
+      name: power_file_view
+      sha256: b566c653557b1a711ff5365278038505241107671cc76acab6423bf25ef826b3
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   provider:
     dependency: "direct main"
     description:

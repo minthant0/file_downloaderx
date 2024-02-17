@@ -1,46 +1,35 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_file_view/flutter_file_view.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 
-import '../theme/colors.dart';
-class FileViewPage extends StatelessWidget {
-  final String filePath;
-  const FileViewPage({super.key, required this.filePath});
+class FileViewPage extends StatefulWidget {
+  // ignore: public_member_api_docs
+  const FileViewPage({Key? key, required this.controller}) : super(key: key);
 
+  /// The [FileViewController] responsible for the file being rendered in this
+  /// widget.
+  final FileViewController controller;
+
+  @override
+  State<FileViewPage> createState() => _FileViewPageState();
+}
+
+class _FileViewPageState extends State<FileViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        iconTheme: IconThemeData(
-          color: Colors.white,
-        ),
-        actionsIconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: AppColors.primaryColor,
-        toolbarHeight: 50,
-        title: Text('View',style: TextStyle(fontWeight: FontWeight.normal,fontSize: 20, color: Colors.white),),
-      ),
-      body: Container(
-        child: PDFView(
-          filePath: filePath,
-          enableSwipe: true,
-          swipeHorizontal: true,
-          autoSpacing: false,
-          pageFling: false,
-          onRender: (_pages) {
-          },
-          onError: (error) {
-            print(error.toString());
-          },
-          onPageError: (page, error) {
-            print('$page: ${error.toString()}');
-          },
-          onViewCreated: (PDFViewController pdfViewController) {
-            // _controller.complete(pdfViewController);
-          },
-        ),
+      appBar: AppBar(title: const Text('View')),
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: FileView(
+              controller: widget.controller,
+
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-

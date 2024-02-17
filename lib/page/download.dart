@@ -1,22 +1,21 @@
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
-import 'package:downloads_path_provider_28/downloads_path_provider_28.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_file_view/flutter_file_view.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:power_point_x/page/file_view.dart';
-import 'package:power_point_x/util/utily.dart';
+import 'package:power_point_x/page/power_file_view_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme/colors.dart';
 import '../util/file_type.dart';
 import '../util/permission_util.dart';
+import 'file_pdf_view.dart';
 
 class DownloadPage extends StatefulWidget {
   const DownloadPage({super.key});
@@ -26,7 +25,9 @@ class DownloadPage extends StatefulWidget {
 }
 
 class _DownloadPageState extends State<DownloadPage> {
-  late TextEditingController urlController = TextEditingController();
+  TextEditingController urlController = TextEditingController();
+  bool isVisible = false;
+  String fileUrl="";
 
   @override
   Widget build(BuildContext context) {
@@ -53,15 +54,22 @@ class _DownloadPageState extends State<DownloadPage> {
               },
             ),
             Container(
+              width: 300,
               margin: EdgeInsets.fromLTRB(0, 50, 0, 0),
               child: ElevatedButton(
                 onPressed: () async {
+                  isVisible=false;
                   FocusScope.of(context).requestFocus(FocusNode());
-                  if(urlController.text!=''){
-                    onTap(context, urlController.text);
+
+                  final fileType = FileUtil.getFileType(urlController.text.toString());
+                  final fileName = FileUtil.getFileName(urlController.text.toString());
+                  String savePath = await getFilePath(fileType, fileName);
+                  if(fileType.toString()=='pdf'){
+                    onTap(context, urlController.text.toString());
                   }else{
-                    showSnack('Please set url');
+                    onTapOther(context, urlController.text.toString(), savePath);
                   }
+
                 },
                 child: const Text('Download',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18, color: Colors.white),),
                 style: ElevatedButton.styleFrom(
@@ -79,60 +87,59 @@ class _DownloadPageState extends State<DownloadPage> {
   Future onTap(BuildContext context, String downloadUrl) async {
     bool result = await InternetConnectionChecker().hasConnection;
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    if(result == true) {
-      bool isGranted = await PermissionUtil.check();
-      if (isGranted) {
-        PermissionStatus requestStatus = await Permission.storage.request();
-        if (requestStatus.isGranted) {
-          var dir = await DownloadsPathProvider.downloadsDirectory;
-          if(dir != null){
-            final fileName = FileUtil.getFileName(downloadUrl);
-            String fileType = FileUtil.getFileType(downloadUrl);
-            String savePath = await getFilePath(fileType, fileName);
-
-            //  String namePath = dir.path + "/$fileName";
-
-            try {
-              await Dio().download(
-                  downloadUrl,
-                  savePath,
-                  onReceiveProgress: (received, total) {
-                    if (total != -1) {
-                      showSnack((received / total * 100).toStringAsFixed(0) + "%");
-                      //you can build progressbar feature too
-                    }
-                  });
-              print(savePath);
-              List<String> fileslist=[];
-              fileslist= prefs.getStringList('save')??[];
-              fileslist.add(savePath);
-              print(fileslist.length);
-              List<String> saveList=[];
-              saveList.clear();
-              for(int i = 0; i < fileslist.length; i++){
-                saveList.add(fileslist[i]);
-              }
-              await prefs.setStringList('save', saveList);
-              showSnack('Success Download');
-            } on DioError catch (e) {
-              print(e.message);
+    bool isGranted = await PermissionUtil.check();
+    if (isGranted) {
+      PermissionStatus requestStatus = await Permission.storage.request();
+      if (requestStatus.isGranted) {
+        var dir = await getTemporaryDirectory();
+        if(dir != null){
+          final fileName = FileUtil.getFileName(downloadUrl);
+          String fileType = FileUtil.getFileType(downloadUrl);
+          String savePath = await getFilePath(fileType, fileName);
+          //  String namePath = dir.path + "/$fileName";
+          try {
+            await Dio().download(
+                downloadUrl,
+                savePath,
+                onReceiveProgress: (received, total) {
+                  if (total != -1) {
+                    showSnack('Downloading...'+(received / total * 100).toStringAsFixed(0) + "%");
+                    //you can build progressbar feature too
+                  }
+                });
+            fileUrl=savePath;
+            print(savePath);
+            List<String> fileslist=[];
+            fileslist= prefs.getStringList('save')??[];
+            fileslist.add(savePath);
+            print(fileslist.length);
+            List<String> saveList=[];
+            saveList.clear();
+            for(int i = 0; i < fileslist.length; i++){
+              saveList.add(fileslist[i]);
             }
-            //output:  /storage/emulated/0/Download/banner.png
+            await prefs.setStringList('save', saveList);
+            showSnackSuccess('Success Download',savePath);
+          } on DioError catch (e) {
+            print(e.message);
           }
-          return true;
-        } else {
-
-          return false;
+          //output:  /storage/emulated/0/Download/banner.png
         }
-        // Navigator.push(context, PageTransition(type: PageTransitionType.fade, child: FileViewPage(filePath: downloadUrl,)));
+        return true;
       } else {
-        debugPrint('no permission');
+
+        return false;
       }
+      // Navigator.push(context, PageTransition(type: PageTransitionType.fade, child: FileViewPage(filePath: downloadUrl,)));
+    } else {
+      debugPrint('no permission');
+    }
+    if(result == true) {
+
     }else{
+
       showSnack('No Internet');
     }
-
 
   }
 
@@ -153,8 +160,47 @@ class _DownloadPageState extends State<DownloadPage> {
       ),);
   }
 
+  void showSnackSuccess(String string,String url){
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: Duration(seconds: 10),
+        content: Row(
+          children: [
+            Expanded(flex: 1,child: Container(child: Text(string,style: TextStyle(fontSize: 15,color: Colors.white)))),
+            Expanded(flex: 1,child: Container(alignment:Alignment.centerRight,child: InkWell(
+              onTap: (){
+                Navigator.push(context, PageTransition(type: PageTransitionType.fade, child: MyPdfViewPage(filePath: url,)));
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+              child: Text('Show',style: TextStyle(fontSize: 18,color: Colors.greenAccent)),
+            )))
+
+          ],
+        ),
+        backgroundColor: Colors.black,
+        behavior: SnackBarBehavior.floating,
+      ),);
+  }
+
   Future getFilePath(String type, String assetPath) async {
     final _directory = await getTemporaryDirectory();
     return "${_directory.path}/fileview/${base64.encode(utf8.encode(assetPath))}.$type";
   }
+
+  Future onTapOther(BuildContext context, String downloadUrl, String downloadPath) async {
+    bool isGranted = await PermissionUtil.check();
+    if (isGranted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (ctx) {
+          return PowerFileViewPage(
+            downloadUrl: downloadUrl,
+            downloadPath: downloadPath,
+          );
+        }),
+      );
+    } else {
+      debugPrint('no permission');
+    }
+  }
+
 }

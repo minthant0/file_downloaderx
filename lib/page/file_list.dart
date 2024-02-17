@@ -1,11 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_file_view/flutter_file_view.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:power_point_x/page/file_pdf_view.dart';
+import 'package:power_point_x/page/power_file_view_page.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/api_provider.dart';
 import '../util/file_type.dart';
+import '../util/permission_util.dart';
 import 'file_view.dart';
 
 class FileListPage extends StatefulWidget {
@@ -33,9 +37,9 @@ class _FileListPageState extends State<FileListPage> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
-    print('FileList');
     return Scaffold(
         body: RefreshIndicator(
           key: _refreshIndicatorKey,
@@ -52,7 +56,6 @@ class _FileListPageState extends State<FileListPage> {
     provider.getList();
     return Consumer(
         builder: (context, NetworkProvider provider, child) {
-          print(provider.fileList.length);
           if(provider.fileList.length!=0){
             List<String> list= provider.fileList ;
             return _buildPosts(context, list!);
@@ -80,13 +83,46 @@ class _FileListPageState extends State<FileListPage> {
             padding: const EdgeInsets.symmetric(horizontal: 15.0),
             child: ElevatedButton(
               onPressed: () async {
-                print(filePath);
-                Navigator.push(context, PageTransition(type: PageTransitionType.fade, child: FileViewPage(filePath: filePath,)));
+                final fileType = FileUtil.getFileType(posts[index]);
+                if(fileType.toString()=='pdf'){
+                  Navigator.push(context, PageTransition(type: PageTransitionType.fade, child: MyPdfViewPage(filePath: filePath,)));
+                }else{
+
+                  print(filePath);
+                  FileViewController? controller;
+
+                  if (filePath.contains('http://') || filePath.contains('https://')) {
+                    controller = FileViewController.network(filePath);
+                  } else {
+                    controller = FileViewController.asset('assets/files/$filePath');
+                  }
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => FileViewPage(controller: controller!),
+                    ),
+                  );
+                }
+
               },
               child: Text(fileName),
             ),
           );
         });
+  }
+  Future onTapOther(BuildContext context, String downloadUrl, String downloadPath) async {
+    bool isGranted = await PermissionUtil.check();
+    if (isGranted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (ctx) {
+          return PowerFileViewPage(
+            downloadUrl: downloadUrl,
+            downloadPath: downloadPath,
+          );
+        }),
+      );
+    } else {
+      debugPrint('no permission');
+    }
   }
   void showSnack(String string){
     ScaffoldMessenger.of(context).showSnackBar(

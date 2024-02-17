@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_file_view/flutter_file_view.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_statusbarcolor_ns/flutter_statusbarcolor_ns.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:power_file_view/power_file_view.dart';
 import 'package:power_point_x/page/download.dart';
 import 'package:power_point_x/page/file_list.dart';
 import 'package:power_point_x/providers/api_provider.dart';
@@ -15,6 +17,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  FlutterFileView.init();
   runApp(const MyApp());
 }
 
