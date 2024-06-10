@@ -1,11 +1,13 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 
 class PermissionUtil {
   static Future<bool> check() async {
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid || Platform.isIOS) {
       PermissionStatus status = await Permission.storage.status;
       if (status.isGranted) {
         print('Granted');
@@ -32,4 +34,5 @@ class PermissionUtil {
       return true;
     }
   }
+
 }

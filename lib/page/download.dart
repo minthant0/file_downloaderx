@@ -31,7 +31,8 @@ class _DownloadPageState extends State<DownloadPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('doenload');
+    print('download');
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Container(
@@ -58,6 +59,7 @@ class _DownloadPageState extends State<DownloadPage> {
               margin: EdgeInsets.fromLTRB(0, 50, 0, 0),
               child: ElevatedButton(
                 onPressed: () async {
+                  //showAlertDialog(context);
                   isVisible=false;
                   FocusScope.of(context).requestFocus(FocusNode());
 
@@ -73,7 +75,7 @@ class _DownloadPageState extends State<DownloadPage> {
                 },
                 child: const Text('Download',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18, color: Colors.white),),
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.blue,
+                  backgroundColor: Colors.blue,
                   shape: StadiumBorder(),
                 ),
               ),
@@ -128,6 +130,7 @@ class _DownloadPageState extends State<DownloadPage> {
         return true;
       } else {
 
+        showAlertDialog(context);
         return false;
       }
       // Navigator.push(context, PageTransition(type: PageTransitionType.fade, child: FileViewPage(filePath: downloadUrl,)));
@@ -140,8 +143,27 @@ class _DownloadPageState extends State<DownloadPage> {
 
       showSnack('No Internet');
     }
-
   }
+
+  showAlertDialog(context) => showCupertinoDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) => CupertinoAlertDialog(
+      title: const Text('Permission Denied'),
+      content: const Text('Allow access to gallery and photos'),
+      actions: <CupertinoDialogAction>[
+        CupertinoDialogAction(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        CupertinoDialogAction(
+          isDefaultAction: true,
+          onPressed: () => openAppSettings(),
+          child: const Text('Settings'),
+        ),
+      ],
+    ),
+  );
 
   void showSnack(String string){
     ScaffoldMessenger.of(context).showSnackBar(
